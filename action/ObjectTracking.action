@@ -1,0 +1,9 @@
+string input_topic
+float32 yolo_confidence
+float32 yolo_nms
+string[] object_list
+int32 redetect_rate
+float32 face_detect_confidence
+---
+---
+TrackedObject[] tracked_objects
