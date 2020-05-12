@@ -1,0 +1,2 @@
+*.pyc
+src/face_detector_tracker/*
