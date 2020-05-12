@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     sm = StateMachine(outcomes=['success', 'failure'])  # the end states of the machine
     with sm:
-        StateMachine.add('take_bag', TakeBag(tiago), transitions={'nothing_given': 'failure'})
+        StateMachine.add('take_bag', TakeBag(tiago), transitions={'start_following': 'success', 'nothing_given': 'failure'})
 
 
         sm.execute()

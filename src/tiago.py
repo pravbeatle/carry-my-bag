@@ -1,8 +1,9 @@
 import rospy
-
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import actionlib
-from actionlib_msgs.msg import *
+
+from actionlib_msgs.msg import GoalStatus
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from play_motion_msgs.msg import PlayMotionAction, PlayMotionGoal
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist
 from std_msgs.msg import String
 
@@ -13,7 +14,8 @@ from pal_interaction_msgs.msg import TtsAction, TtsGoal
 class Tiago:
     def __init__(self):
 
-        self.goal_sent = False	# if goal is sent, we need to cancel before shutting down
+        self.move_base_goal_sent = False	# if goal is sent, we need to cancel before shutting down
+        self.play_motion_goal_sent = False
 
         rospy.on_shutdown(self.shutdown)
 
@@ -26,8 +28,12 @@ class Tiago:
         self.velocity_publisher = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
 
         self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-        rospy.loginfo("Wait until the action server comes up")
+        rospy.loginfo("Wait until the move_base action server comes up")
         self.move_base.wait_for_server(rospy.Duration(5))
+
+        self.play_motion = actionlib.SimpleActionClient("play_motion", PlayMotionAction)
+        rospy.loginfo("Wait until the play_motion action server comes up")
+        self.play_motion.wait_for_server(rospy.Duration(5))
 
         self.tts_client = actionlib.SimpleActionClient('/tts', TtsAction)
 
@@ -59,7 +65,7 @@ class Tiago:
             pose, quat = self.calculate_pos_quat(pose, quat)
 
         # send a goal
-        self.goal_sent = True
+        self.move_base_goal_sent = True
         goal = MoveBaseGoal()
         goal.target_pose.header.frame_id = 'map'
         goal.target_pose.header.stamp = rospy.Time.now()
@@ -68,7 +74,7 @@ class Tiago:
 
         self.move_base.send_goal(goal)
 
-        rospy.loginfo('Sent goal and waiting for robot to carry it out...')
+        rospy.loginfo('Sent move_base goal and waiting for robot to carry it out...')
         success = self.move_base.wait_for_result(rospy.Duration(90))
 
         state = self.move_base.get_state()
@@ -78,8 +84,30 @@ class Tiago:
             result = True
         else:
             self.move_base.cancel_goal()
+            self.move_base_goal_sent = False
 
-            self.goal_sent = False
+        return result
+
+
+    def play(self, motion_name):
+
+        self.play_motion_goal_sent = True
+        play_goal = PlayMotionGoal()
+        play_goal.motion_name = motion_name
+        play_goal.skip_planning = True
+
+        self.play_motion.send_goal(play_goal)
+        rospy.loginfo('Sent play_motion goal and waiting for robot to carry it out... ')
+        success = self.play_motion.wait_for_result(rospy.Duration(30))
+
+        state = self.play_motion.get_state()
+        result = False
+
+        if success and state == GoalStatus.SUCCEEDED:
+            result = True
+        else:
+            self.play_motion.cancel_goal()
+            self.play_motion_goal_sent = False
 
         return result
 
@@ -94,7 +122,12 @@ class Tiago:
 
 
     def shutdown(self):
-        if self.goal_sent:
+        if self.move_base_goal_sent:
             self.move_base.cancel_goal()
+            rospy.loginfo("Stop Robot")
+            rospy.sleep(1)
+
+        if self.play_motion_goal_sent:
+            self.play_motion.cancel_goal()
             rospy.loginfo("Stop Robot")
             rospy.sleep(1)
