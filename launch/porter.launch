@@ -1,0 +1,24 @@
+<launch>
+    <arg name="robotname" default="porter" />
+    <arg name="use_gui" default="false" />
+
+    <include file="$(find tiago_2dnav_gazebo)/launch/tiago_navigation.launch">
+      <arg name="public_sim"  value="true"/>
+      <arg name="robot"  value="steel"/>
+      <arg name="world"  value="tutorial_office"/>
+    </include>
+    <!-- <include file="$(find obstacle_avoidance)/launch/obstacle_avoidance.launch"></include> -->
+
+    <!-- Load the custom motions into the parameter server -->
+    <rosparam command="load" file="$(find jeff_object_tracking)/config/motions.yaml" />
+
+    <!-- Yolo object detection server and the depth mask servers-->
+    <!-- <node pkg="lasr_object_detection_yolo" type="object_detection_server.py" name="yolo_detection" args="" output="screen" /> -->
+    <!-- <node pkg="lasr_object_detection_yolo" type="pcl2_to_image_server.py" name="" args="" output="screen" /> -->
+
+    <group ns="$(arg robotname)">
+        <param name="robot_name" value="$(arg robotname)" />
+        <param name="tf_prefix" value="$(arg robotname)" />
+    </group>
+
+</launch>

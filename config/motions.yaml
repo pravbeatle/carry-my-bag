@@ -1,0 +1,25 @@
+play_motion:
+  motions:
+    reach_out_arm:
+      joints: [arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint]
+      points:
+      - positions: [0.07, -0.69, -2.02, 2.03, -0.21, 0.22, 0.95]
+        time_from_start: 2.0
+
+    close_gripper:
+      joints: [gripper_left_finger_joint, gripper_right_finger_joint]
+      points:
+      - positions: [0.0, 0.0]
+        time_from_start: 2.0
+
+    open_gripper:
+      joints: [gripper_left_finger_joint, gripper_right_finger_joint]
+      points:
+      - positions: [0.03, 0.03]    # check this
+        time_from_start: 2.0
+
+    tuck_arm:
+      joints: [arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint]
+      points:
+      - positions: [1.24, -1.05, -1.58, 2.28, 0.08, 0.22, 0.95]
+        time_from_start: 2.0
