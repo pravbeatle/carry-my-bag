@@ -27,24 +27,20 @@ class ObjectTrackingServer:
             goal.object_list, goal.redetect_rate,           \
             goal.face_detect_confidence)
 
-        print('object tracking goal : ', goal)
         image_sub = rospy.Subscriber(goal.input_topic, Image, self.tracking_cb)
 
         rospy.spin()
 
     def tracking_cb(self, data):
-        print('inside tracking cb with image ')
         try:
             frame = self.bridge.imgmsg_to_cv2(data, 'bgr8')
         except CvBridgeError:
             return
 
-        print('inside tracking image callback')
         # TODO: if time gap is too long, delete all the prev tracked objects, here
         self.face_detector_tracker.update(frame)
 
         tracked_objects = []
-        print('trackers from yolo : ', self.face_detector_tracker.trackers)
         for tracker in self.face_detector_tracker.trackers:
             tracked_objects.append(TrackedObject(tracker.id, tracker.label, tracker.box, tracker.name))
             # draw bounding box

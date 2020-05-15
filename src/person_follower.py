@@ -2,7 +2,7 @@
 
 import message_filters
 import actionlib
-
+import rospy
 import numpy as np
 import tf
 from tf2_ros import TransformException
@@ -22,7 +22,8 @@ class PersonFollower:
     TARGET_DIST = 1.5
     MOVE_BASE_RESET = 2
 
-    def __init__(self, target):
+    def __init__(self, target, bot):
+        self.bot = bot
         self.target = target
         self.last_followed = None
         self.time_last = rospy.Time.now()
@@ -49,7 +50,7 @@ class PersonFollower:
         self.client.send_goal(goal)
 
         # camera output redirection for processing
-        self.redirect_pub = rospy.Publisher(self.INPUT_TOPIC, Image, queue_size = 1)
+        self.redirect_pub = rospy.Publisher(self.INPUT_TOPIC, Image, queue_size = 1, latch = True)
 
         # subscriber and queue to retrieve processed result
         self.tracking_sub = rospy.Subscriber('object_tracking/feedback', ObjectTrackingFeedback, self.feedback_in)
@@ -62,12 +63,10 @@ class PersonFollower:
         ts.registerCallback(self.follow_person)
 
     def follow_person(self, image, pcl):
-        print('entered callback')
+
         self.redirect_pub.publish(image)
-        print('post publishing image')
         data = self.feedback_queue.get()
 
-        print('feedback from server : ', data)
         for tracked_object in data.feedback.tracked_objects:
             if tracked_object.name == self.target:
                 cloud = np.fromstring(pcl.data, np.float32)
@@ -95,7 +94,7 @@ class PersonFollower:
                 # greet the person if not yet followed
                 if not tracked_object.name == self.last_followed:
                     speech_out = 'Hello ' + tracked_object.name + ', I will follow you.'
-                    self.talk(speech_out)
+                    self.bot.talk(speech_out)
                     self.last_followed = tracked_object.name
 
                 if (rospy.Time.now() - self.time_last).secs >= self.MOVE_BASE_RESET:
@@ -147,5 +146,4 @@ class PersonFollower:
                 break
 
     def feedback_in(self, data):
-        print('inside feedback cb')
         self.feedback_queue.put(data)

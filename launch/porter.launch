@@ -19,6 +19,8 @@
     <group ns="$(arg robotname)">
         <param name="robot_name" value="$(arg robotname)" />
         <param name="tf_prefix" value="$(arg robotname)" />
+
+        <!-- <node pkg="jeff_object_tracking" type="person_tracking_server.py" name="PersonTrackingServer" args="" output="screen" />  -->
     </group>
 
 </launch>
