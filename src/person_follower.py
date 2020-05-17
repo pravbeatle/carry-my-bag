@@ -18,15 +18,16 @@ from Queue import Queue, Empty
 
 
 class PersonFollower:
+    TRACK_TOPIC = 'tracked_objects'
     INPUT_TOPIC = 'image_rect_color'
     TARGET_DIST = 1.5
     MOVE_BASE_RESET = 2
 
-    def __init__(self, target, bot):
-        self.bot = bot
+    def __init__(self, target):
         self.target = target
         self.last_followed = None
         self.time_last = rospy.Time.now()
+        self.start_following = False
 
         self.transform_listener = tf.TransformListener()
 
@@ -52,6 +53,9 @@ class PersonFollower:
         # camera output redirection for processing
         self.redirect_pub = rospy.Publisher(self.INPUT_TOPIC, Image, queue_size = 1, latch = True)
 
+        # publish objects tracked
+        self.tracked_objects_pub = rospy.Publisher(self.TRACK_TOPIC, Image, queue_size = 1)
+
         # subscriber and queue to retrieve processed result
         self.tracking_sub = rospy.Subscriber('object_tracking/feedback', ObjectTrackingFeedback, self.feedback_in)
         self.feedback_queue = Queue()
@@ -68,7 +72,11 @@ class PersonFollower:
         data = self.feedback_queue.get()
 
         for tracked_object in data.feedback.tracked_objects:
-            if tracked_object.name == self.target:
+            if tracked_object.name == self.target and tracked_object.name != self.last_followed:
+                self.last_followed = tracked_object.name
+                print('changed in follower')
+
+            if tracked_object.name == self.target and self.start_following:
                 cloud = np.fromstring(pcl.data, np.float32)
                 # get centre point x,y,z
                 centre_x = int(tracked_object.box[0] + tracked_object.box[2]/2)
@@ -90,12 +98,6 @@ class PersonFollower:
                 ph_goal.pointing_axis = Vector3(1,0,0)
 
                 self.point_head_client.send_goal(ph_goal)
-
-                # greet the person if not yet followed
-                if not tracked_object.name == self.last_followed:
-                    speech_out = 'Hello ' + tracked_object.name + ', I will follow you.'
-                    self.bot.talk(speech_out)
-                    self.last_followed = tracked_object.name
 
                 if (rospy.Time.now() - self.time_last).secs >= self.MOVE_BASE_RESET:
                     self.time_last = rospy.Time.now()
