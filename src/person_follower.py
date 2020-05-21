@@ -6,7 +6,7 @@ import rospy
 import numpy as np
 import tf
 from tf2_ros import TransformException
-from math import sqrt, atan2
+from math import sqrt, atan2, floor
 
 from sensor_msgs.msg import Image, PointCloud2
 from geometry_msgs.msg import Point, PointStamped, Vector3, PoseWithCovarianceStamped, Quaternion
@@ -18,7 +18,7 @@ from Queue import Queue, Empty
 
 
 class PersonFollower:
-    TRACK_TOPIC = 'tracked_objects'
+    # TRACK_TOPIC = 'tracked_objects'
     INPUT_TOPIC = 'image_rect_color'
     TARGET_DIST = 1.5
     MOVE_BASE_RESET = 2
@@ -28,6 +28,7 @@ class PersonFollower:
         self.last_followed = None
         self.time_last = rospy.Time.now()
         self.start_following = False
+        self.target_reached_first_time = False
 
         self.transform_listener = tf.TransformListener()
 
@@ -54,7 +55,7 @@ class PersonFollower:
         self.redirect_pub = rospy.Publisher(self.INPUT_TOPIC, Image, queue_size = 1, latch = True)
 
         # publish objects tracked
-        self.tracked_objects_pub = rospy.Publisher(self.TRACK_TOPIC, Image, queue_size = 1)
+        # self.tracked_objects_pub = rospy.Publisher(self.TRACK_TOPIC, Image, queue_size = 1)
 
         # subscriber and queue to retrieve processed result
         self.tracking_sub = rospy.Subscriber('object_tracking/feedback', ObjectTrackingFeedback, self.feedback_in)
@@ -74,7 +75,6 @@ class PersonFollower:
         for tracked_object in data.feedback.tracked_objects:
             if tracked_object.name == self.target and tracked_object.name != self.last_followed:
                 self.last_followed = tracked_object.name
-                print('changed in follower')
 
             if tracked_object.name == self.target and self.start_following:
                 cloud = np.fromstring(pcl.data, np.float32)
@@ -117,14 +117,22 @@ class PersonFollower:
                         # calculate target point if euclidian distance is not within threshold.
                         # otherwise tiago is nearby, rotate around current point.
                         if euclidian_dist > self.TARGET_DIST + (self.TARGET_DIST/10):
+
+                            print(floor(euclidian_dist - self.TARGET_DIST))
+                            if not floor(euclidian_dist - self.TARGET_DIST):
+                                print('reached near target')
+                                self.target_reached_first_time = True
+
                             # ratio of (desired dist)/(total dist)
                             ratio = (euclidian_dist - self.TARGET_DIST)/euclidian_dist
+
                             # add (ratio * actual dist) to robot point, basically scale the triangle
                             target_x = robot_point.x + (ratio * dist_x)
                             target_y = robot_point.y + (ratio * dist_y)
                         else:
                             target_x = robot_point.x
                             target_y = robot_point.y
+
 
                         target_point = Point(target_x, target_y, 0)
 

@@ -10,7 +10,7 @@ from states.StandBy import StandBy
 if __name__ == '__main__':
     rospy.init_node('porter')
     tiago = Tiago()
-    follower = PersonFollower('jess')
+    follower = PersonFollower('')
 
     sm = StateMachine(outcomes=['success', 'failure'])  # the end states of the machine
     with sm:

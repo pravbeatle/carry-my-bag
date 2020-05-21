@@ -9,10 +9,12 @@ class StandBy(State):
 
     def execute(self, userdata):
 
-        print(self.follower.target)
-        while self.follower.last_followed != self.follower.target:
+        print(self.follower.target_reached_first_time)
+        self.follower.start_following = True
+        while not self.follower.target_reached_first_time:
             continue
 
+        self.follower.start_following = False
         self.tiago.talk('Hello ' + self.follower.target + ', Do you need help with your bag ?')
         print('ASSUME AFFIRMATIVE')
         rospy.sleep(2)
