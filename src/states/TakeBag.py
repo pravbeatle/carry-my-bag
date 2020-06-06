@@ -9,16 +9,19 @@ class TakeBag(State):
 
 	def execute(self, userdata):
 
-
+		self.tiago.talk('Please hand me your bag.')
 		self.tiago.play('reach_out_arm')
 
-		self.tiago.talk('Please hand me your bag.')
-		rospy.sleep(5)
-		self.tiago.play('close_gripper')
+		speech = self.tiago.recognize_speech()
+		print(speech)
+		if speech["success"] and ('done' or 'handed' or 'hand' in speech["transcription"]):
+			self.tiago.play('close_gripper')
+			self.tiago.play('tuck_arm')
 
-		self.tiago.play('tuck_arm')
-		self.tiago.talk('I will follow you now.')
+			self.tiago.talk('I will follow you now.')
 
-		self.follower.start_following = True
+			self.follower.start_following = True
 
-		return 'start_following'
+			return 'start_following'
+		else:
+			return 'nothing_given'

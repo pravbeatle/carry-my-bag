@@ -16,7 +16,10 @@ class StandBy(State):
 
         self.follower.start_following = False
         self.tiago.talk('Hello ' + self.follower.target + ', Do you need help with your bag ?')
-        print('ASSUME AFFIRMATIVE')
-        rospy.sleep(2)
 
-        return 'porter_request'
+        speech = self.tiago.recognize_speech()
+        print(speech)
+        if speech["success"] and ('yes' in speech["transcription"]):
+            return 'porter_request'
+        else:
+            return 'loop_back'

@@ -7,9 +7,11 @@ from play_motion_msgs.msg import PlayMotionAction, PlayMotionGoal
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist
 from std_msgs.msg import String
 
+import speech_recognition as sr
 import yaml
 import numpy as np
 from pal_interaction_msgs.msg import TtsAction, TtsGoal
+import pyttsx
 
 class Tiago:
     def __init__(self):
@@ -112,13 +114,50 @@ class Tiago:
         return result
 
 
+    def recognize_speech(self, duration=None):
+        # transcribe speech from recorded from microphone
+        recognizer = sr.Recognizer()
+        microphone = sr.Microphone()
+
+        # adjust the recognizer sensitivity to ambient noise and record audio
+        # from the microphone
+        with microphone as source:
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source)
+
+        # set up the response object
+        response = {
+            "success": True,
+            "error": None,
+            "transcription": None
+        }
+
+        try:
+            response["transcription"] = recognizer.recognize_google(audio)
+        except sr.RequestError:
+            # API was unreachable or unresponsive
+            response["success"] = False
+            response["error"] = "API unavailable"
+        except sr.UnknownValueError:
+            # speech was unintelligible
+            response["success"] = False
+            response["error"] = "Unable to recognize speech"
+
+        return response
+
+
     def talk(self, speech_in):
         # Create the TTS goal and send it
         print('\033[1;36mTIAGO: ' + speech_in + '\033[0m')
+        speech_engine = pyttsx.init()
+        speech_engine.say(speech_in)
+        speech_engine.runAndWait()
+
         tts_goal = TtsGoal()
         tts_goal.rawtext.lang_id = 'en_GB'
         tts_goal.rawtext.text = speech_in
         self.tts_client.send_goal(tts_goal)
+
 
 
     def shutdown(self):
