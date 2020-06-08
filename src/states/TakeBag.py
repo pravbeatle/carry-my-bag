@@ -13,13 +13,12 @@ class TakeBag(State):
 		self.tiago.play('reach_out_arm')
 
 		speech = self.tiago.recognize_speech()
-		print(speech)
-		if speech["success"] and ('done' or 'handed' or 'hand' in speech["transcription"]):
+		print('TRANSCRIPTED SPEECH : ', speech)
+		if speech["transcription"] and ('thank' in speech['transcription'].encode('ascii','ignore').split()):
 			self.tiago.play('close_gripper')
 			self.tiago.play('tuck_arm')
 
 			self.tiago.talk('I will follow you now.')
-
 			self.follower.start_following = True
 
 			return 'start_following'

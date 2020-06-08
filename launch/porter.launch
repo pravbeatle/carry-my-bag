@@ -2,10 +2,13 @@
     <arg name="robotname" default="porter" />
     <arg name="use_gui" default="false" />
 
+    <env name="GAZEBO_MODEL_PATH" value="$(find custom_worlds)/models" />
+    <env name="GAZEBO_RESOURCE_PATH" value="$(find custom_worlds)/worlds" />
+
     <include file="$(find tiago_2dnav_gazebo)/launch/tiago_navigation.launch">
       <arg name="public_sim"  value="true"/>
       <arg name="robot"  value="steel"/>
-      <arg name="world"  value="tutorial_office"/>
+      <arg name="world"  value="robocup"/>
     </include>
     <!-- <include file="$(find obstacle_avoidance)/launch/obstacle_avoidance.launch"></include> -->
 

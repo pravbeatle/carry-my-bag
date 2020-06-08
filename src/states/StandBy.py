@@ -18,8 +18,8 @@ class StandBy(State):
         self.tiago.talk('Hello ' + self.follower.target + ', Do you need help with your bag ?')
 
         speech = self.tiago.recognize_speech()
-        print(speech)
-        if speech["success"] and ('yes' in speech["transcription"]):
+        print('TRANSCRIPTED SPEECH : ', speech)
+        if speech["transcription"] and ('yes' or 'please' in speech['transcription'].encode('ascii','ignore').split()):
             return 'porter_request'
         else:
             return 'loop_back'

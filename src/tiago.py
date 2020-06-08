@@ -13,6 +13,8 @@ import numpy as np
 from pal_interaction_msgs.msg import TtsAction, TtsGoal
 import pyttsx
 
+input_points_path = './src/jeff_object_tracking/config/input_points.yaml'
+
 class Tiago:
     def __init__(self):
 
@@ -38,6 +40,14 @@ class Tiago:
         self.play_motion.wait_for_server(rospy.Duration(5))
 
         self.tts_client = actionlib.SimpleActionClient('/tts', TtsAction)
+
+        with open(input_points_path, 'r') as stream:
+			try:
+				pts = yaml.safe_load(stream)
+				self.conf_room = {'x': pts['conference_room_point'][0], 'y': pts['conference_room_point'][1]}
+
+			except yaml.YAMLError as e:
+				print(e)
 
 
     def move(self, linear=(0,0,0), angular=(0,0,0)):
@@ -89,6 +99,12 @@ class Tiago:
             self.move_base_goal_sent = False
 
         return result
+
+
+    def go_to_conf_room(self):
+		result = self.go_to(self.conf_room['x'], self.conf_room['y'], mode='point')
+
+		return result
 
 
     def play(self, motion_name):
