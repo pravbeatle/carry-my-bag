@@ -9,7 +9,6 @@ class StandBy(State):
 
     def execute(self, userdata):
 
-        print(self.follower.target_reached_first_time)
         self.follower.start_following = True
         while not self.follower.target_reached_first_time:
             continue

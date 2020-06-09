@@ -9,7 +9,7 @@ play_motion:
     close_gripper:
       joints: [gripper_left_finger_joint, gripper_right_finger_joint]
       points:
-      - positions: [0.01, 0.01]
+      - positions: [0.007, 0.007]
         time_from_start: 2.0
 
     open_gripper:

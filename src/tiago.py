@@ -39,6 +39,8 @@ class Tiago:
         rospy.loginfo("Wait until the play_motion action server comes up")
         self.play_motion.wait_for_server(rospy.Duration(5))
 
+        self.arm_reached = False
+
         self.tts_client = actionlib.SimpleActionClient('/tts', TtsAction)
 
         with open(input_points_path, 'r') as stream:

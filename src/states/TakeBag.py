@@ -9,8 +9,11 @@ class TakeBag(State):
 
 	def execute(self, userdata):
 
+		if not self.tiago.arm_reached:
+			self.tiago.play('reach_out_arm')
+			self.tiago.arm_reached = True
+
 		self.tiago.talk('Please hand me your bag.')
-		self.tiago.play('reach_out_arm')
 
 		speech = self.tiago.recognize_speech()
 		print('TRANSCRIPTED SPEECH : ', speech)
